@@ -21,3 +21,23 @@ export function getStatus(value: number, l: Limits = {}): Status {
   if (l.warnHigh !== undefined && value >= l.warnHigh) return "warn";
   return "ok";
 }
+
+// Compile-time guard: if a new Status is added and a switch forgets it,
+// TypeScript reports an error here instead of failing silently at runtime.
+export function assertNever(value: never): never {
+  throw new Error(`Unhandled status: ${String(value)}`);
+}
+
+// Human-readable word for each status. Every case of the union is handled.
+export function statusLabel(status: Status): string {
+  switch (status) {
+    case "ok":
+      return "OK";
+    case "warn":
+      return "Warning";
+    case "crit":
+      return "Critical";
+    default:
+      return assertNever(status);
+  }
+}
