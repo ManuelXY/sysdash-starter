@@ -62,3 +62,9 @@ export function worstStatus(statuses: Status[]): Status {
     "ok",
   );
 }
+
+// Comparator for Array.sort: most severe first (crit, warn, ok).
+// Returns a negative number when `a` should come before `b`.
+export function compareBySeverity(a: Status, b: Status): number {
+  return SEVERITY[b] - SEVERITY[a];
+}

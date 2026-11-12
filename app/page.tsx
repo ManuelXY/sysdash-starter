@@ -1,14 +1,18 @@
 import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
 import { systems } from "@/data/systems";
-import { getStatus } from "@/lib/status";
+import { compareBySeverity, getStatus } from "@/lib/status";
 
 export default function Home() {
-  // Derive the status once per system from its value and limits.
-  const ratedSystems = systems.map((system) => ({
-    ...system,
-    status: getStatus(system.value, system.limits),
-  }));
+  // Derive the status once per system from its value and limits,
+  // then show the most severe tiles first. `map` returns a new array,
+  // so sorting it does not change the original `systems` list.
+  const ratedSystems = systems
+    .map((system) => ({
+      ...system,
+      status: getStatus(system.value, system.limits),
+    }))
+    .sort((a, b) => compareBySeverity(a.status, b.status));
 
   return (
     <main className="mx-auto max-w-5xl p-4 sm:p-8">
