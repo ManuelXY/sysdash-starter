@@ -3,9 +3,9 @@ import { statusLabel, type Status } from "@/lib/status";
 // Record<Status, string> forces an entry for every status:
 // a missing key is a type error.
 const badgeStyles: Record<Status, string> = {
-  ok: "bg-green-950 text-green-300",
-  warn: "bg-amber-950 text-amber-300",
-  crit: "bg-red-950 text-red-300",
+  ok: "border border-line text-ok",
+  warn: "bg-warn text-warn-ink",
+  crit: "bg-crit text-crit-ink",
 };
 
 type StatusBadgeProps = {

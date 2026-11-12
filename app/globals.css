@@ -1,7 +1,45 @@
 @import "tailwindcss";
 
+/*
+  Design tokens. Tailwind turns every --color-* variable into utilities
+  (bg-canvas, text-ink, border-line, ...).
+
+  `--color-*: initial` removes Tailwind's default palette, so only the
+  colors below exist. That keeps the design system small and consistent.
+
+  Idea: like an alarm panel in a control room, the normal state stays
+  quiet and gray. Color is reserved for warnings and critical states.
+
+  Spacing: only the steps 2, 4, 6, 8 and 12 are used (8, 16, 24, 32, 48 px).
+*/
+@theme {
+  --color-*: initial;
+
+  /* Surfaces */
+  --color-canvas: #e4e8ec; /* page background */
+  --color-surface: #f8f9fa; /* tiles */
+  --color-line: #b9c1cc; /* borders */
+
+  /* Text: both have a contrast of at least 6.5:1 on canvas and surface */
+  --color-ink: #17202b;
+  --color-ink-muted: #46515d;
+
+  /* Status. The *-ink colors are the text colors on a filled status area. */
+  --color-ok: #1d6b40;
+  --color-warn: #f2b632;
+  --color-warn-ink: #33250a;
+  --color-crit: #b0202b;
+  --color-crit-ink: #ffffff;
+
+  /* Keyboard focus ring */
+  --color-focus: #0b4fd6;
+
+  /* The font variable is set by next/font in app/layout.tsx. */
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+}
+
 body {
-  background: #0b1220;
-  color: #e5e7eb;
-  font-family: system-ui, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }

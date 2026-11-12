@@ -17,10 +17,10 @@ export default function Home() {
   return (
     <main className="mx-auto max-w-7xl p-4 sm:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-semibold text-ink">
           Manuels Website
         </h1>
-        <p className="text-slate-400">
+        <p className="text-ink-muted">
           System status at a glance
         </p>
         <StatusSummary statuses={ratedSystems.map((s) => s.status)} />

@@ -27,7 +27,7 @@ export default function StatusSummary({ statuses }: StatusSummaryProps) {
           .join(", ");
 
   return (
-    <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-200">
+    <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-ink">
       <StatusBadge status={overall} />
       <span>{text}</span>
     </p>
