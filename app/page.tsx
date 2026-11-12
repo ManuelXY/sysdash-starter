@@ -1,6 +1,7 @@
 import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
+import WeatherSection from "@/components/WeatherSection";
 import { systems } from "@/data/systems";
 import { compareBySeverity, getStatus } from "@/lib/status";
 
@@ -40,6 +41,8 @@ export default function Home() {
             ))}
           </TileGrid>
         </section>
+
+        <WeatherSection />
       </main>
     </div>
   );
