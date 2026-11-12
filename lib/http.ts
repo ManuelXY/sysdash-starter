@@ -66,3 +66,38 @@ export function errorMessage(kind: ErrorKind): string {
     }
   }
 }
+
+// HTTP status our own API routes answer with for each error kind.
+const STATUS_BY_KIND: Record<ErrorKind, number> = {
+  timeout: 504,
+  "rate-limit": 429,
+  auth: 401,
+  "not-configured": 503,
+  network: 502,
+  http: 502,
+  "invalid-data": 502,
+};
+
+// Server side: builds the error answer of an API route, e.g. { "error": "timeout" }.
+export function errorResponse(kind: ErrorKind): Response {
+  return Response.json({ error: kind }, { status: STATUS_BY_KIND[kind] });
+}
+
+// Type guard: checks at runtime that an unknown value is one of our error kinds.
+function isErrorKind(value: unknown): value is ErrorKind {
+  return typeof value === "string" && value in STATUS_BY_KIND;
+}
+
+// Browser side: calls one of our own /api routes and throws a FetchError
+// for every answer that is not OK. The browser waits a little longer than
+// the server (10 s vs. 8 s), so the server's own timeout answer arrives first.
+export async function fetchApi(path: string): Promise<Response> {
+  const response = await fetchWithTimeout(path, 10_000);
+  if (response.ok) return response;
+
+  // Our routes send { "error": "<kind>" }. If the body is something else,
+  // fall back to the status code.
+  const body: unknown = await response.json().catch(() => null);
+  const kind = (body as { error?: unknown } | null)?.error;
+  throw new FetchError(isErrorKind(kind) ? kind : kindFromStatus(response.status));
+}
