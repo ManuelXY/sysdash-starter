@@ -43,3 +43,13 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+/*
+  Visible keyboard focus for every focusable element (e.g. the Refresh
+  buttons). :focus-visible shows the ring for keyboard users, not on
+  mouse clicks.
+*/
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
