@@ -16,28 +16,31 @@ export default function Home() {
     .sort((a, b) => compareBySeverity(a.status, b.status));
 
   return (
-    <main className="mx-auto max-w-7xl p-4 sm:p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold text-ink">
-          Manuels Website
-        </h1>
-        <p className="text-ink-muted">
-          System status at a glance
-        </p>
+    <div className="mx-auto max-w-7xl p-4 md:p-8">
+      <header className="mb-12">
+        <h1 className="text-sm font-semibold text-ink-muted">SysDash</h1>
         <StatusSummary statuses={ratedSystems.map((s) => s.status)} />
       </header>
 
-      <TileGrid>
-        {ratedSystems.map((s) => (
-          <Tile
-            key={s.id}
-            title={s.title}
-            value={s.value}
-            unit={s.unit}
-            status={s.status}
-          />
-        ))}
-      </TileGrid>
-    </main>
+      <main className="flex flex-col gap-12">
+        {/* aria-labelledby gives the section its heading as accessible name. */}
+        <section aria-labelledby="systems-heading">
+          <h2 id="systems-heading" className="mb-4 text-lg font-semibold text-ink">
+            Server metrics
+          </h2>
+          <TileGrid>
+            {ratedSystems.map((s) => (
+              <Tile
+                key={s.id}
+                title={s.title}
+                value={s.value}
+                unit={s.unit}
+                status={s.status}
+              />
+            ))}
+          </TileGrid>
+        </section>
+      </main>
+    </div>
   );
 }
