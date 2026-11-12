@@ -5,7 +5,7 @@
 export type ErrorKind =
   | "timeout" // the service did not answer in time
   | "rate-limit" // HTTP 429: too many requests
-  | "auth" // HTTP 401/403: API key rejected
+  | "auth" // HTTP 401/403: access refused, e.g. API key rejected
   | "not-configured" // API key missing on our server
   | "network" // no connection
   | "http" // any other HTTP error
@@ -51,7 +51,7 @@ export function errorMessage(kind: ErrorKind): string {
     case "rate-limit":
       return "Too many requests. Wait a minute before you refresh again.";
     case "auth":
-      return "The API key was rejected. A new key can take up to two hours to become active.";
+      return "Access was refused. Check the API key: a new key can take up to two hours to become active.";
     case "not-configured":
       return "No API key found. Add OPENWEATHER_API_KEY to .env.local and restart the dev server.";
     case "network":
