@@ -1,3 +1,4 @@
+import MetarSection from "@/components/MetarSection";
 import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
@@ -43,6 +44,7 @@ export default function Home() {
         </section>
 
         <WeatherSection />
+        <MetarSection />
       </main>
     </div>
   );
