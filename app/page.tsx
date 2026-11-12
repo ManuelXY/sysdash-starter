@@ -15,7 +15,7 @@ export default function Home() {
     .sort((a, b) => compareBySeverity(a.status, b.status));
 
   return (
-    <main className="mx-auto max-w-5xl p-4 sm:p-8">
+    <main className="mx-auto max-w-7xl p-4 sm:p-8">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-white">
           Manuels Website
@@ -26,7 +26,8 @@ export default function Home() {
         <StatusSummary statuses={ratedSystems.map((s) => s.status)} />
       </header>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* 1 column on phones, 2 from 768 px (md), 3 from 1280 px (xl). */}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {ratedSystems.map((s) => (
           <Tile
             key={s.id}
