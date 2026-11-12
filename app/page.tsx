@@ -1,3 +1,4 @@
+import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
 import { systems } from "@/data/systems";
 import { getStatus } from "@/lib/status";
@@ -18,6 +19,7 @@ export default function Home() {
         <p className="text-slate-400">
           System status at a glance
         </p>
+        <StatusSummary statuses={ratedSystems.map((s) => s.status)} />
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

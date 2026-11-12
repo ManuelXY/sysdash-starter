@@ -41,3 +41,24 @@ export function statusLabel(status: Status): string {
       return assertNever(status);
   }
 }
+
+// Higher number = more severe. Used for sorting and for the overall status.
+const SEVERITY: Record<Status, number> = { ok: 0, warn: 1, crit: 2 };
+
+export type StatusCounts = Record<Status, number>;
+
+// Counts how often each status occurs, e.g. { ok: 3, warn: 2, crit: 1 }.
+export function countStatuses(statuses: Status[]): StatusCounts {
+  return statuses.reduce<StatusCounts>(
+    (counts, status) => ({ ...counts, [status]: counts[status] + 1 }),
+    { ok: 0, warn: 0, crit: 0 },
+  );
+}
+
+// The most severe status of a list. An empty list counts as "ok".
+export function worstStatus(statuses: Status[]): Status {
+  return statuses.reduce<Status>(
+    (worst, status) => (SEVERITY[status] > SEVERITY[worst] ? status : worst),
+    "ok",
+  );
+}
