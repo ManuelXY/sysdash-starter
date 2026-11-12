@@ -46,6 +46,25 @@ auf dem Server: Der Browser ruft nur `/api/weather` auf, erst diese Route hängt
 Jede Live-Quelle hat ihren eigenen Lade-, Leer- und Fehlerzustand (Timeout, 429,
 abgelehnter Key, kein Netz, unlesbare Antwort) und einen Refresh-Button.
 
+## Qualität prüfen
+
+**Responsiv:** In den Chrome-DevTools (F12 → Gerätewahl) bei genau diesen Breiten testen:
+
+| Breite | Gerät | Spalten |
+|---|---|---|
+| 375 px | Smartphone | 1 |
+| 1024 px | Tablet quer | 2 |
+| 1440 px | Desktop | 3 |
+
+**Barrierefreiheit:** F12 → Tab „Lighthouse" → nur „Accessibility" wählen → „Analyze page load".
+Ziel ist ein Score von mindestens 90.
+
+**Tastatur:** Mit Tab zu den Refresh-Buttons springen (der blaue Rahmen zeigt den Fokus),
+mit Enter oder Leertaste auslösen.
+
+**Fehlerfall:** Den Key in `.env.local` kurz umbenennen und den Server neu starten —
+der Wetterbereich zeigt dann eine Fehlermeldung, der Rest der Seite läuft weiter.
+
 ## Was liegt wo
 
 | Datei | Wofür |
