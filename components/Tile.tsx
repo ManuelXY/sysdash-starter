@@ -1,8 +1,8 @@
 import StatusBadge from "@/components/StatusBadge";
 import type { Status } from "@/lib/status";
 
-// A reusable dashboard tile.
-// `status` is optional: tiles without limits simply show no badge.
+// A reusable dashboard tile, rendered as a list item inside <TileGrid>.
+// `status` is optional: tiles without limits show no status strip.
 type TileProps = {
   title: string;
   value: number;
@@ -10,24 +10,27 @@ type TileProps = {
   status?: Status;
 };
 
-const borderStyles: Record<Status, string> = {
+// A critical tile gets a colored frame, so it stands out in the grid.
+const frameStyles: Record<Status, string> = {
   ok: "border-line",
   warn: "border-warn",
-  crit: "border-crit",
+  crit: "border-crit ring-2 ring-crit",
 };
 
 export default function Tile({ title, value, unit, status }: TileProps) {
-  const border = status ? borderStyles[status] : "border-line";
+  const frame = status ? frameStyles[status] : "border-line";
 
   return (
-    <div className={`rounded-md border-l-4 bg-surface p-6 ${border}`}>
-      <div className="flex items-center justify-between gap-2">
+    <li className={`flex flex-col overflow-hidden rounded-md border bg-surface ${frame}`}>
+      <div className="p-6">
         <h3 className="text-sm font-medium text-ink-muted">{title}</h3>
-        {status && <StatusBadge status={status} />}
+        {/* tabular-nums: all digits have the same width, so numbers line up. */}
+        <p className="mt-2 text-4xl font-semibold tabular-nums text-ink">
+          {value} <span className="text-lg font-normal text-ink-muted">{unit}</span>
+        </p>
       </div>
-      <p className="mt-4 text-4xl font-semibold text-ink">
-        {value} <span className="text-lg font-normal text-ink-muted">{unit}</span>
-      </p>
-    </div>
+      {/* mt-auto pushes the strip to the bottom when tiles differ in height. */}
+      {status && <StatusBadge status={status} className="mt-auto border-t border-line px-6 py-2" />}
+    </li>
   );
 }

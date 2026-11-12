@@ -1,5 +1,6 @@
 import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
+import TileGrid from "@/components/TileGrid";
 import { systems } from "@/data/systems";
 import { compareBySeverity, getStatus } from "@/lib/status";
 
@@ -26,8 +27,7 @@ export default function Home() {
         <StatusSummary statuses={ratedSystems.map((s) => s.status)} />
       </header>
 
-      {/* 1 column on phones, 2 from 768 px (md), 3 from 1280 px (xl). */}
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <TileGrid>
         {ratedSystems.map((s) => (
           <Tile
             key={s.id}
@@ -37,7 +37,7 @@ export default function Home() {
             status={s.status}
           />
         ))}
-      </section>
+      </TileGrid>
     </main>
   );
 }
