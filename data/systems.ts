@@ -10,9 +10,10 @@ export type System = {
   limits?: Limits;
 };
 
+// The values are chosen so that every status (ok, warn, crit) shows up.
 export const systems: System[] = [
-  { id: "cpu", title: "CPU Load", value: 42, unit: "%", limits: { warnHigh: 75, critHigh: 90 } },
-  { id: "ram", title: "Memory", value: 71, unit: "%", limits: { warnHigh: 80, critHigh: 95 } },
+  { id: "cpu", title: "CPU Load", value: 93, unit: "%", limits: { warnHigh: 75, critHigh: 90 } },
+  { id: "ram", title: "Memory", value: 84, unit: "%", limits: { warnHigh: 80, critHigh: 95 } },
   { id: "disk", title: "Disk", value: 88, unit: "%", limits: { warnHigh: 80, critHigh: 95 } },
   {
     id: "temp",
