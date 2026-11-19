@@ -15,7 +15,11 @@ export type RemoteState =
   // The source failed, but we still have the last successful readings.
   | { phase: "stale"; readings: Reading[]; updatedAt: Date; kind: ErrorKind };
 
-// Loads readings when the component appears and again on every refresh().
+// How often the data is reloaded automatically, in milliseconds.
+const POLL_INTERVAL_MS = 30_000;
+
+// Loads readings when the component appears, on every refresh() and
+// automatically every 30 seconds (polling).
 // `storageKey` names the place where the last successful readings are kept.
 export function useRemoteData(storageKey: string, load: () => Promise<Reading[]>) {
   const [state, setState] = useState<RemoteState>({ phase: "loading" });
@@ -64,6 +68,21 @@ export function useRemoteData(storageKey: string, load: () => Promise<Reading[]>
       outdated = true;
     };
   }, [storageKey, load, attempt]);
+
+  // Auto-refresh: a timer counts `attempt` up every 30 seconds, which re-runs
+  // the loading effect above. Unlike refresh() it does not switch to the
+  // loading state, so the current values stay visible until new ones arrive.
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // Do not poll while the browser tab is in the background.
+      if (document.hidden) return;
+      setAttempt((count) => count + 1);
+    }, POLL_INTERVAL_MS);
+
+    // Cleanup: stop the timer when the component disappears.
+    // Without it, every new mount would add one more running timer.
+    return () => clearInterval(timer);
+  }, []);
 
   function refresh() {
     setState({ phase: "loading" });

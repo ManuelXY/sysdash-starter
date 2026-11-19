@@ -81,8 +81,10 @@ export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
         </button>
       </div>
 
-      {/* aria-live: screen readers announce when the content changes. */}
-      <div aria-live="polite" aria-busy={loading}>
+      {/* aria-live: screen readers announce when the content changes, e.g.
+          an error appears. While fresh values are shown it is off, otherwise
+          every automatic refresh (every 30 s) would be read out loud. */}
+      <div aria-live={state.phase === "ready" ? "off" : "polite"} aria-busy={loading}>
         <SectionContent state={state} />
       </div>
     </section>
