@@ -12,17 +12,19 @@ const badgeStyles: Record<Status, string> = {
 
 type StatusBadgeProps = {
   status: Status;
+  // Optional own wording, e.g. "Stale". Default: the word for the status.
+  label?: string;
   className?: string;
 };
 
 // Status as icon + word, so it never depends on color alone.
-export default function StatusBadge({ status, className = "" }: StatusBadgeProps) {
+export default function StatusBadge({ status, label, className = "" }: StatusBadgeProps) {
   return (
     <span
       className={`flex items-center gap-2 text-sm font-semibold ${badgeStyles[status]} ${className}`}
     >
       <StatusIcon status={status} />
-      {statusLabel(status)}
+      {label ?? statusLabel(status)}
     </span>
   );
 }

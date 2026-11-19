@@ -1,5 +1,6 @@
 "use client";
 
+import StatusBadge from "@/components/StatusBadge";
 import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
 import { useRemoteData, type RemoteState } from "@/hooks/useRemoteData";
@@ -13,11 +14,14 @@ type RemoteSectionProps = {
 };
 
 const timeFormat = new Intl.DateTimeFormat("en-GB", { timeStyle: "medium" });
+// Stale data can be from another day, so this format includes the date.
+const dateTimeFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "short", timeStyle: "medium" });
 
 // A dashboard section fed by an external source. It owns its own loading,
 // empty and error state, so one failing source never breaks the other.
 export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
-  const { state, refresh } = useRemoteData(load);
+  // The key under which this source keeps its last successful readings.
+  const { state, refresh } = useRemoteData(`sysdash:last-good:${id}`, load);
   const headingId = `${id}-heading`;
   const loading = state.phase === "loading";
 
@@ -31,7 +35,9 @@ export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
           <p className="text-sm text-ink-muted">
             {state.phase === "ready"
               ? `Updated at ${timeFormat.format(state.updatedAt)}`
-              : "Live data"}
+              : state.phase === "stale"
+                ? "Live data unavailable"
+                : "Live data"}
           </p>
         </div>
         {/* A real <button>: reachable with Tab, triggered with Enter or Space.
@@ -94,6 +100,25 @@ function SectionContent({ state }: { state: RemoteState }) {
             The service answered but sent no measurements. Try again later.
           </p>
         </div>
+      );
+    case "stale":
+      // The source failed, but older readings exist: show them, clearly
+      // marked as outdated (icon + word + time), instead of an error only.
+      return (
+        <>
+          <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-warn bg-surface p-4">
+            <StatusBadge status="warn" label="Stale" className="rounded-md px-2 py-1" />
+            <p className="text-sm text-ink">
+              Showing the last values from {dateTimeFormat.format(state.updatedAt)}.{" "}
+              {errorMessage(state.kind)}
+            </p>
+          </div>
+          <TileGrid>
+            {state.readings.map((reading) => (
+              <Tile key={reading.id} title={reading.title} value={reading.value} unit={reading.unit} />
+            ))}
+          </TileGrid>
+        </>
       );
     case "ready":
       return (
