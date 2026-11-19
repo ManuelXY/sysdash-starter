@@ -3,9 +3,15 @@
 import StatusBadge from "@/components/StatusBadge";
 import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
-import { useRemoteData, type RemoteState } from "@/hooks/useRemoteData";
+import {
+  healthOf,
+  useRemoteData,
+  type RemoteState,
+  type SourceHealth,
+} from "@/hooks/useRemoteData";
 import { errorMessage } from "@/lib/http";
 import type { Reading } from "@/lib/readings";
+import type { Status } from "@/lib/status";
 
 type RemoteSectionProps = {
   id: string;
@@ -17,6 +23,14 @@ const timeFormat = new Intl.DateTimeFormat("en-GB", { timeStyle: "medium" });
 // Stale data can be from another day, so this format includes the date.
 const dateTimeFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "short", timeStyle: "medium" });
 
+// How each health level looks: it reuses the status colors and icons,
+// with its own word. Record<SourceHealth, ...> forces an entry for each level.
+const healthBadge: Record<SourceHealth, { status: Status; label: string }> = {
+  ok: { status: "ok", label: "OK" },
+  degraded: { status: "warn", label: "Degraded" },
+  down: { status: "crit", label: "Down" },
+};
+
 // A dashboard section fed by an external source. It owns its own loading,
 // empty and error state, so one failing source never breaks the other.
 export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
@@ -24,14 +38,25 @@ export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
   const { state, refresh } = useRemoteData(`sysdash:last-good:${id}`, load);
   const headingId = `${id}-heading`;
   const loading = state.phase === "loading";
+  const health = healthOf(state);
 
   return (
     <section aria-labelledby={headingId}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 id={headingId} className="text-lg font-semibold text-ink">
-            {title}
-          </h2>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <h2 id={headingId} className="text-lg font-semibold text-ink">
+              {title}
+            </h2>
+            {/* Health badge of this source. Hidden while loading (health is null). */}
+            {health && (
+              <StatusBadge
+                status={healthBadge[health].status}
+                label={healthBadge[health].label}
+                className="rounded-md px-2 py-1"
+              />
+            )}
+          </div>
           <p className="text-sm text-ink-muted">
             {state.phase === "ready"
               ? `Updated at ${timeFormat.format(state.updatedAt)}`
@@ -102,15 +127,15 @@ function SectionContent({ state }: { state: RemoteState }) {
         </div>
       );
     case "stale":
-      // The source failed, but older readings exist: show them, clearly
-      // marked as outdated (icon + word + time), instead of an error only.
+      // The source failed, but older readings exist: show them with a note
+      // that says how old they are, instead of an error only.
+      // The "Degraded" badge next to the heading marks the source itself.
       return (
         <>
-          <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-warn bg-surface p-4">
-            <StatusBadge status="warn" label="Stale" className="rounded-md px-2 py-1" />
+          <div className="mb-4 rounded-md border border-warn bg-surface p-4">
             <p className="text-sm text-ink">
-              Showing the last values from {dateTimeFormat.format(state.updatedAt)}.{" "}
-              {errorMessage(state.kind)}
+              <strong className="font-semibold">Stale values</strong> from{" "}
+              {dateTimeFormat.format(state.updatedAt)}. {errorMessage(state.kind)}
             </p>
           </div>
           <TileGrid>

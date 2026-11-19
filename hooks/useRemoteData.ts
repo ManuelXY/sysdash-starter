@@ -72,3 +72,28 @@ export function useRemoteData(storageKey: string, load: () => Promise<Reading[]>
 
   return { state, refresh };
 }
+
+// Health of a source as shown in its badge.
+//   ok       - fresh data
+//   degraded - the source answers without data, or it failed and we show older values
+//   down     - the source failed and there is nothing to show
+// null while loading: the health is not known yet.
+export type SourceHealth = "ok" | "degraded" | "down";
+
+export function healthOf(state: RemoteState): SourceHealth | null {
+  switch (state.phase) {
+    case "loading":
+      return null;
+    case "ready":
+      return "ok";
+    case "stale":
+    case "empty":
+      return "degraded";
+    case "error":
+      return "down";
+    default: {
+      const unhandled: never = state;
+      return unhandled;
+    }
+  }
+}
