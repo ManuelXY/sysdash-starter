@@ -1,3 +1,4 @@
+import IssSection from "@/components/IssSection";
 import MetarSection from "@/components/MetarSection";
 import StatusSummary from "@/components/StatusSummary";
 import Tile from "@/components/Tile";
@@ -45,6 +46,7 @@ export default function Home() {
 
         <WeatherSection />
         <MetarSection />
+        <IssSection />
       </main>
     </div>
   );
