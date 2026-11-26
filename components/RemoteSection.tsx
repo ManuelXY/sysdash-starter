@@ -10,10 +10,10 @@ import {
   type RemoteState,
   type SourceHealth,
 } from "@/hooks/useRemoteData";
-import { matchesQuery } from "@/lib/filter";
 import { errorMessage } from "@/lib/http";
 import type { Reading } from "@/lib/readings";
 import type { Status } from "@/lib/status";
+import { filterByTitle } from "@/lib/systemLogic";
 
 type RemoteSectionProps = {
   id: string;
@@ -159,14 +159,20 @@ function SectionContent({ state, query }: { state: RemoteState; query: string })
 // The tiles of a source, filtered by the search text. The filtered list is
 // calculated here on every render and is not kept in state.
 function ReadingTiles({ readings, query }: { readings: Reading[]; query: string }) {
-  const visible = readings.filter((reading) => matchesQuery(reading.title, query));
+  const visible = filterByTitle(readings, query);
 
   if (visible.length === 0) return <NoMatch query={query} />;
 
   return (
     <TileGrid>
       {visible.map((reading) => (
-        <Tile key={reading.id} title={reading.title} value={reading.value} unit={reading.unit} />
+        <Tile
+          key={reading.id}
+          title={reading.title}
+          value={reading.value}
+          unit={reading.unit}
+          query={query}
+        />
       ))}
     </TileGrid>
   );

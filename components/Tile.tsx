@@ -1,5 +1,6 @@
 import StatusBadge from "@/components/StatusBadge";
 import type { Status } from "@/lib/status";
+import { splitTitle } from "@/lib/systemLogic";
 
 // A reusable dashboard tile, rendered as a list item inside <TileGrid>.
 // `status` is optional: tiles without limits show no status strip.
@@ -9,6 +10,8 @@ type TileProps = {
   value: number | null;
   unit: string;
   status?: Status;
+  // Search text: the matching part of the title is shown in bold.
+  query?: string;
 };
 
 // At most one decimal place: 7.34 becomes "7.3", 93 stays "93".
@@ -21,13 +24,21 @@ const frameStyles: Record<Status, string> = {
   crit: "border-crit ring-2 ring-crit",
 };
 
-export default function Tile({ title, value, unit, status }: TileProps) {
+export default function Tile({ title, value, unit, status, query = "" }: TileProps) {
   const frame = status ? frameStyles[status] : "border-line";
+  const parts = splitTitle(title, query);
 
   return (
     <li className={`flex flex-col overflow-hidden rounded-md border bg-surface ${frame}`}>
       <div className="p-6">
-        <h3 className="text-sm font-medium text-ink-muted">{title}</h3>
+        <h3 className="text-sm font-medium text-ink-muted">
+          {parts.before}
+          {/* <mark> is the HTML element for a highlighted search match. */}
+          {parts.match && (
+            <mark className="bg-transparent font-bold text-ink underline">{parts.match}</mark>
+          )}
+          {parts.after}
+        </h3>
         {/* tabular-nums: all digits have the same width, so numbers line up. */}
         {value === null ? (
           <p className="mt-2 text-4xl font-semibold text-ink-muted">
