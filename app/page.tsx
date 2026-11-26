@@ -1,9 +1,5 @@
-import IssSection from "@/components/IssSection";
-import MetarSection from "@/components/MetarSection";
+import Dashboard from "@/components/Dashboard";
 import StatusSummary from "@/components/StatusSummary";
-import Tile from "@/components/Tile";
-import TileGrid from "@/components/TileGrid";
-import WeatherSection from "@/components/WeatherSection";
 import { systems } from "@/data/systems";
 import { compareBySeverity, getStatus } from "@/lib/status";
 
@@ -26,27 +22,9 @@ export default function Home() {
       </header>
 
       <main className="flex flex-col gap-12">
-        {/* aria-labelledby gives the section its heading as accessible name. */}
-        <section aria-labelledby="systems-heading">
-          <h2 id="systems-heading" className="mb-4 text-lg font-semibold text-ink">
-            Server metrics
-          </h2>
-          <TileGrid>
-            {ratedSystems.map((s) => (
-              <Tile
-                key={s.id}
-                title={s.title}
-                value={s.value}
-                unit={s.unit}
-                status={s.status}
-              />
-            ))}
-          </TileGrid>
-        </section>
-
-        <WeatherSection />
-        <MetarSection />
-        <IssSection />
+        {/* The header above always summarizes ALL systems.
+            The search inside <Dashboard> only changes which tiles are shown. */}
+        <Dashboard systems={ratedSystems} />
       </main>
     </div>
   );

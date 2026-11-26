@@ -1,5 +1,6 @@
 "use client";
 
+import NoMatch from "@/components/NoMatch";
 import StatusBadge from "@/components/StatusBadge";
 import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
@@ -9,6 +10,7 @@ import {
   type RemoteState,
   type SourceHealth,
 } from "@/hooks/useRemoteData";
+import { matchesQuery } from "@/lib/filter";
 import { errorMessage } from "@/lib/http";
 import type { Reading } from "@/lib/readings";
 import type { Status } from "@/lib/status";
@@ -17,6 +19,8 @@ type RemoteSectionProps = {
   id: string;
   title: string;
   load: () => Promise<Reading[]>;
+  // Search text from the dashboard: only tiles whose title matches are shown.
+  query: string;
 };
 
 const timeFormat = new Intl.DateTimeFormat("en-GB", { timeStyle: "medium" });
@@ -33,7 +37,7 @@ const healthBadge: Record<SourceHealth, { status: Status; label: string }> = {
 
 // A dashboard section fed by an external source. It owns its own loading,
 // empty and error state, so one failing source never breaks the other.
-export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
+export default function RemoteSection({ id, title, load, query }: RemoteSectionProps) {
   // The key under which this source keeps its last successful readings.
   const { state, refresh } = useRemoteData(`sysdash:last-good:${id}`, load);
   const headingId = `${id}-heading`;
@@ -85,14 +89,14 @@ export default function RemoteSection({ id, title, load }: RemoteSectionProps) {
           an error appears. While fresh values are shown it is off, otherwise
           every automatic refresh (every 30 s) would be read out loud. */}
       <div aria-live={state.phase === "ready" ? "off" : "polite"} aria-busy={loading}>
-        <SectionContent state={state} />
+        <SectionContent state={state} query={query} />
       </div>
     </section>
   );
 }
 
 // One branch per phase of the union.
-function SectionContent({ state }: { state: RemoteState }) {
+function SectionContent({ state, query }: { state: RemoteState; query: string }) {
   switch (state.phase) {
     case "loading":
       return (
@@ -140,24 +144,30 @@ function SectionContent({ state }: { state: RemoteState }) {
               {dateTimeFormat.format(state.updatedAt)}. {errorMessage(state.kind)}
             </p>
           </div>
-          <TileGrid>
-            {state.readings.map((reading) => (
-              <Tile key={reading.id} title={reading.title} value={reading.value} unit={reading.unit} />
-            ))}
-          </TileGrid>
+          <ReadingTiles readings={state.readings} query={query} />
         </>
       );
     case "ready":
-      return (
-        <TileGrid>
-          {state.readings.map((reading) => (
-            <Tile key={reading.id} title={reading.title} value={reading.value} unit={reading.unit} />
-          ))}
-        </TileGrid>
-      );
+      return <ReadingTiles readings={state.readings} query={query} />;
     default: {
       const unhandled: never = state;
       return unhandled;
     }
   }
+}
+
+// The tiles of a source, filtered by the search text. The filtered list is
+// calculated here on every render and is not kept in state.
+function ReadingTiles({ readings, query }: { readings: Reading[]; query: string }) {
+  const visible = readings.filter((reading) => matchesQuery(reading.title, query));
+
+  if (visible.length === 0) return <NoMatch query={query} />;
+
+  return (
+    <TileGrid>
+      {visible.map((reading) => (
+        <Tile key={reading.id} title={reading.title} value={reading.value} unit={reading.unit} />
+      ))}
+    </TileGrid>
+  );
 }
