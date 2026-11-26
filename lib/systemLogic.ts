@@ -96,6 +96,40 @@ export function sortReadings(readings: Reading[], sortKey: SortKey): Reading[] {
   }
 }
 
+// Keeps the most important systems on top: all critical ones first, then
+// the rest. Inside both groups the given order stays as it is, so this can
+// be applied after any sorting. Returns a new array.
+export function pinCritical(systems: RatedSystem[]): RatedSystem[] {
+  const critical = systems.filter((system) => system.status === "crit");
+  const others = systems.filter((system) => system.status !== "crit");
+  return [...critical, ...others];
+}
+
+// Reads fresh values from an API answer (tolerant reader): only `id` and
+// `value` of well-formed entries are used, everything else is ignored.
+export function readValueUpdates(data: unknown): Map<string, number> {
+  const updates = new Map<string, number>();
+  if (!Array.isArray(data)) return updates;
+
+  for (const entry of data as unknown[]) {
+    const item = entry as { id?: unknown; value?: unknown } | null;
+    if (typeof item?.id === "string" && typeof item?.value === "number" && Number.isFinite(item.value)) {
+      updates.set(item.id, item.value);
+    }
+  }
+  return updates;
+}
+
+// Applies fresh values to the list of systems. Systems without an update
+// (for example the ones added through the form) are kept unchanged.
+// Returns a new array with new objects; the given list is not changed.
+export function applyValueUpdates(systems: System[], updates: Map<string, number>): System[] {
+  return systems.map((system) => {
+    const value = updates.get(system.id);
+    return value === undefined ? system : { ...system, value };
+  });
+}
+
 // Type guard for the value of the sort dropdown, which is a plain string.
 export function isSortKey(value: string): value is SortKey {
   return value === "severity" || value === "name" || value === "value";
