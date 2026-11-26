@@ -1,4 +1,34 @@
-import type { System } from "@/data/systems";
+import { systems, type System } from "@/data/systems";
+
+// How far each value may move away from its base value, in its own unit.
+// There are no real servers behind this course project, so GET simulates
+// measurements: each call returns the base value plus a small random change.
+const SPREAD: Record<string, number> = {
+  cpu: 6,
+  ram: 6,
+  disk: 3,
+  temp: 6,
+  net: 6,
+  uptime: 0.3,
+};
+
+// A simulated current value: base value plus/minus up to `spread`,
+// rounded to one decimal place. Percent values stay between 0 and 100.
+function simulate(system: System): number {
+  const spread = SPREAD[system.id] ?? 0;
+  const change = (Math.random() * 2 - 1) * spread;
+  const value = Math.round((system.value + change) * 10) / 10;
+  return system.unit === "%" ? Math.min(100, Math.max(0, value)) : Math.max(0, value);
+}
+
+// GET /api/systems
+// Returns the current state of all known systems. The dashboard polls this
+// route to keep itself up to date.
+export async function GET(): Promise<Response> {
+  const current: System[] = systems.map((system) => ({ ...system, value: simulate(system) }));
+  // no-store: every request must get fresh values, never a cached answer.
+  return Response.json(current, { headers: { "Cache-Control": "no-store" } });
+}
 
 const MAX_TITLE_LENGTH = 40;
 
