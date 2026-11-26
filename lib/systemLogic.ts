@@ -3,13 +3,14 @@
 // The components just hold state and call these functions.
 
 import type { System } from "@/data/systems";
-import { compareBySeverity, getStatus, type Status } from "@/lib/status";
+import type { Reading } from "@/lib/readings";
+import { getStatus, severityRank, type Status } from "@/lib/status";
 
 // A system together with the status derived from its value and limits.
 export type RatedSystem = System & { status: Status };
 
-// The ways the system tiles can be sorted.
-export type SortKey = "severity" | "name";
+// The ways the tiles can be sorted.
+export type SortKey = "severity" | "name" | "value";
 
 // Derives the status of every system. `map` returns a new array.
 export function rateSystems(systems: System[]): RatedSystem[] {
@@ -32,17 +33,62 @@ export function filterByTitle<T extends { title: string }>(items: T[], query: st
   return items.filter((item) => matchesQuery(item.title, query));
 }
 
-// Sorts systems by severity (critical first) or by name (A to Z).
+// Generic sort: works for a list of ANY type T.
+// `getKey` says which value of an item to sort by, e.g. (s) => s.title.
+// TypeScript checks that getKey fits the items, so no `any` is needed.
+// Numbers are compared as numbers, text alphabetically (ignoring case).
 // Array.sort changes the array it is called on, so we sort a copy ([...]).
-export function sortSystems(systems: RatedSystem[], sortKey: SortKey): RatedSystem[] {
-  const copy = [...systems];
+export function sortBy<T>(
+  items: T[],
+  getKey: (item: T) => string | number,
+  direction: "asc" | "desc" = "asc",
+): T[] {
+  // 1 keeps the order of the comparison, -1 turns it around.
+  const factor = direction === "asc" ? 1 : -1;
 
+  return [...items].sort((a, b) => {
+    const keyA = getKey(a);
+    const keyB = getKey(b);
+
+    const result =
+      typeof keyA === "number" && typeof keyB === "number"
+        ? keyA - keyB
+        : String(keyA).localeCompare(String(keyB), "en", { sensitivity: "base" });
+
+    return result * factor;
+  });
+}
+
+// Sorts the system tiles. Every case uses the same generic sortBy,
+// only the key and the direction differ.
+export function sortSystems(systems: RatedSystem[], sortKey: SortKey): RatedSystem[] {
   switch (sortKey) {
     case "severity":
-      return copy.sort((a, b) => compareBySeverity(a.status, b.status));
+      // Most severe first.
+      return sortBy(systems, (system) => severityRank(system.status), "desc");
     case "name":
-      // localeCompare sorts text alphabetically, ignoring upper/lower case.
-      return copy.sort((a, b) => a.title.localeCompare(b.title, "en", { sensitivity: "base" }));
+      return sortBy(systems, (system) => system.title);
+    case "value":
+      // Highest value first.
+      return sortBy(systems, (system) => system.value, "desc");
+    default: {
+      const unhandled: never = sortKey;
+      return unhandled;
+    }
+  }
+}
+
+// Sorts the tiles of a live source: the same sortBy with another type.
+// Readings have no severity, so that choice keeps their original order.
+export function sortReadings(readings: Reading[], sortKey: SortKey): Reading[] {
+  switch (sortKey) {
+    case "severity":
+      return readings;
+    case "name":
+      return sortBy(readings, (reading) => reading.title);
+    case "value":
+      // Highest value first. A missing value (null) goes to the end.
+      return sortBy(readings, (reading) => reading.value ?? -Infinity, "desc");
     default: {
       const unhandled: never = sortKey;
       return unhandled;
@@ -52,7 +98,7 @@ export function sortSystems(systems: RatedSystem[], sortKey: SortKey): RatedSyst
 
 // Type guard for the value of the sort dropdown, which is a plain string.
 export function isSortKey(value: string): value is SortKey {
-  return value === "severity" || value === "name";
+  return value === "severity" || value === "name" || value === "value";
 }
 
 // A title cut into three parts around the first match of the search text.

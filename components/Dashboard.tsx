@@ -32,7 +32,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
   const [systems, setSystems] = useState(initialSystems);
   // State 2: the text the user typed into the search field.
   const [query, setQuery] = useState("");
-  // State 3: how the system tiles are sorted.
+  // State 3: how the tiles are sorted.
   const [sortKey, setSortKey] = useState<SortKey>("severity");
 
   // Everything below is NOT state. It is calculated from the three states
@@ -76,7 +76,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
 
           <div>
             <label htmlFor="system-sort" className="block text-sm font-medium text-ink">
-              Sort server metrics by
+              Sort tiles by
             </label>
             {/* Controlled dropdown. Its value is a plain string, so isSortKey
                 checks it before it becomes the new state. */}
@@ -90,6 +90,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
             >
               <option value="severity">Severity</option>
               <option value="name">Name</option>
+              <option value="value">Value</option>
             </select>
           </div>
         </div>
@@ -118,10 +119,11 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
           <AddSystemForm onAdded={addSystem} />
         </section>
 
-        {/* The live sections get the search text and filter their own tiles. */}
-        <WeatherSection query={query} />
-        <MetarSection query={query} />
-        <IssSection query={query} />
+        {/* The live sections get the search text and the sort key and apply
+            them to their own tiles. */}
+        <WeatherSection query={query} sortKey={sortKey} />
+        <MetarSection query={query} sortKey={sortKey} />
+        <IssSection query={query} sortKey={sortKey} />
       </main>
     </>
   );
