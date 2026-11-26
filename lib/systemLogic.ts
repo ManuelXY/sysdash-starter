@@ -101,6 +101,27 @@ export function isSortKey(value: string): value is SortKey {
   return value === "severity" || value === "name" || value === "value";
 }
 
+// The sort order used when the URL names none (or an unknown one).
+export const DEFAULT_SORT_KEY: SortKey = "severity";
+
+// Reads the sort key from a URL parameter. A missing or unknown value
+// (someone may have edited the link by hand) falls back to the default.
+export function parseSortKey(value: string | null): SortKey {
+  return value !== null && isSortKey(value) ? value : DEFAULT_SORT_KEY;
+}
+
+// Builds the query string for the URL, e.g. "?q=cpu&sort=name".
+// Empty search and default sorting are left out, so the plain address
+// stays clean. URLSearchParams escapes special characters such as spaces.
+export function buildFilterQuery(query: string, sortKey: SortKey): string {
+  const params = new URLSearchParams();
+  if (query.trim() !== "") params.set("q", query);
+  if (sortKey !== DEFAULT_SORT_KEY) params.set("sort", sortKey);
+
+  const text = params.toString();
+  return text === "" ? "" : `?${text}`;
+}
+
 // A title cut into three parts around the first match of the search text.
 export type TitleParts = { before: string; match: string; after: string };
 

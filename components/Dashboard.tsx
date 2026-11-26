@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import AddSystemForm from "@/components/AddSystemForm";
 import IssSection from "@/components/IssSection";
@@ -11,8 +12,10 @@ import TileGrid from "@/components/TileGrid";
 import WeatherSection from "@/components/WeatherSection";
 import type { System } from "@/data/systems";
 import {
+  buildFilterQuery,
   filterByTitle,
   isSortKey,
+  parseSortKey,
   rateSystems,
   sortSystems,
   type SortKey,
@@ -30,16 +33,33 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
   // State 1: the list of systems. It starts with the given systems and
   // grows when the form adds one.
   const [systems, setSystems] = useState(initialSystems);
+  // Tools to read and write the address bar (?q=cpu&sort=name).
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
   // State 2: the text the user typed into the search field.
-  const [query, setQuery] = useState("");
   // State 3: how the tiles are sorted.
-  const [sortKey, setSortKey] = useState<SortKey>("severity");
+  // Both start with the value from the URL. The function form of useState
+  // runs only on the first render, so a reload or a shared link restores them.
+  const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
+  const [sortKey, setSortKey] = useState(() => parseSortKey(searchParams.get("sort")));
 
   // Everything below is NOT state. It is calculated from the three states
   // on every render, so it can never get out of sync with them.
   // The pure functions return new arrays and never change the state.
   const ratedSystems = rateSystems(systems);
   const visibleSystems = sortSystems(filterByTitle(ratedSystems, query), sortKey);
+
+  // Changes search and sorting: updates the state (the page reacts at once)
+  // and writes the same values into the URL. `replace` swaps the current
+  // history entry, so typing does not fill the browser's back button.
+  // scroll: false keeps the page where it is.
+  function updateFilter(nextQuery: string, nextSortKey: SortKey) {
+    setQuery(nextQuery);
+    setSortKey(nextSortKey);
+    router.replace(`${pathname}${buildFilterQuery(nextQuery, nextSortKey)}`, { scroll: false });
+  }
 
   // Called by the form with the system the server sent back.
   // A new array (instead of push) tells React that the state changed.
@@ -67,7 +87,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
               id="tile-search"
               type="search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => updateFilter(event.target.value, sortKey)}
               placeholder="e.g. temperature"
               autoComplete="off"
               className="mt-2 block w-full rounded-md border border-ink-muted bg-surface px-4 py-2 text-ink placeholder:text-ink-muted"
@@ -84,7 +104,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
               id="system-sort"
               value={sortKey}
               onChange={(event) => {
-                if (isSortKey(event.target.value)) setSortKey(event.target.value);
+                if (isSortKey(event.target.value)) updateFilter(query, event.target.value);
               }}
               className="mt-2 block rounded-md border border-ink-muted bg-surface px-4 py-2 text-ink"
             >
