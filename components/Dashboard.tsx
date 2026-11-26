@@ -11,35 +11,15 @@ import Tile from "@/components/Tile";
 import TileGrid from "@/components/TileGrid";
 import WeatherSection from "@/components/WeatherSection";
 import type { System } from "@/data/systems";
-import { useLiveSystems, type LiveInfo } from "@/hooks/useLiveSystems";
 import {
   buildFilterQuery,
   filterByTitle,
   isSortKey,
   parseSortKey,
-  pinCritical,
   rateSystems,
   sortSystems,
   type SortKey,
 } from "@/lib/systemLogic";
-
-const timeFormat = new Intl.DateTimeFormat("en-GB", { timeStyle: "medium" });
-
-// Short text about the automatic refresh. One case per phase.
-function liveText(info: LiveInfo): string {
-  switch (info.phase) {
-    case "waiting":
-      return "Updates automatically.";
-    case "live":
-      return `Updated at ${timeFormat.format(info.updatedAt)}.`;
-    case "failed":
-      return "Update failed, showing the last values.";
-    default: {
-      const unhandled: never = info;
-      return unhandled;
-    }
-  }
-}
 
 type DashboardProps = {
   // The systems the page starts with (from data/systems.ts).
@@ -50,9 +30,9 @@ type DashboardProps = {
 // control, all tile sections and the form. It only holds state and calls
 // the functions in lib/systemLogic.ts - it makes no decisions itself.
 export default function Dashboard({ initialSystems }: DashboardProps) {
-  // State 1: the list of systems. The hook starts with the given systems,
-  // refreshes their values every 10 seconds and adds systems from the form.
-  const { systems, addSystem, info } = useLiveSystems(initialSystems);
+  // State 1: the list of systems. It starts with the given systems and
+  // grows when the form adds one.
+  const [systems, setSystems] = useState(initialSystems);
   // Tools to read and write the address bar (?q=cpu&sort=name).
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -69,8 +49,7 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
   // on every render, so it can never get out of sync with them.
   // The pure functions return new arrays and never change the state.
   const ratedSystems = rateSystems(systems);
-  // Filter, then sort as chosen, then keep critical systems on top.
-  const visibleSystems = pinCritical(sortSystems(filterByTitle(ratedSystems, query), sortKey));
+  const visibleSystems = sortSystems(filterByTitle(ratedSystems, query), sortKey);
 
   // Changes search and sorting: updates the state (the page reacts at once)
   // and writes the same values into the URL. `replace` swaps the current
@@ -80,6 +59,12 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
     setQuery(nextQuery);
     setSortKey(nextSortKey);
     router.replace(`${pathname}${buildFilterQuery(nextQuery, nextSortKey)}`, { scroll: false });
+  }
+
+  // Called by the form with the system the server sent back.
+  // A new array (instead of push) tells React that the state changed.
+  function addSystem(system: System) {
+    setSystems((current) => [...current, system]);
   }
 
   return (
@@ -132,14 +117,9 @@ export default function Dashboard({ initialSystems }: DashboardProps) {
 
         {/* aria-labelledby gives the section its heading as accessible name. */}
         <section aria-labelledby="systems-heading">
-          <div className="mb-4">
-            <h2 id="systems-heading" className="text-lg font-semibold text-ink">
-              Server metrics
-            </h2>
-            <p className="text-sm text-ink-muted">
-              {liveText(info)} Critical systems always stay on top.
-            </p>
-          </div>
+          <h2 id="systems-heading" className="mb-4 text-lg font-semibold text-ink">
+            Server metrics
+          </h2>
           {visibleSystems.length === 0 ? (
             <NoMatch query={query} />
           ) : (
